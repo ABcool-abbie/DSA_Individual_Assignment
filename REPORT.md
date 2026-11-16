@@ -43,11 +43,20 @@ Important tests/edge cases and what they demonstrate.
 Record reproducible before/after measurements for loading/preparation, repeated runtime work, and relevant allocation behavior. Explain what changed and why.
 
 ### Baseline (untouched starter)
-Baseline world-query workload
 - Locations: 2500
 - Connections: 9800
 - Iterations: 5000
 - Elapsed: 524 ms
+- Checksum: 6267100
+
+### After using Dictionary
+- Locations: 2500
+- Connections: 9800
+- Iterations: 5000
+- Elapsed: 0 ms
+- Checksum: 6267100
+
+
 
 ## 7. Development reflection
 
