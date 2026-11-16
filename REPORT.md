@@ -20,6 +20,13 @@ A: I will sort the arrays first (O(log n)) or consider to replace those O(n) ope
 
 Describe important changes/retained choices, operations affected, and time/memory trade-offs.
 
+- Important changes: Locations and connections stored in two unsorted arrays which every query had to scan them linearly. So I build two Dictionary indexes (Dictionary<int, Location> + Dictionary<int, List<Connection>>) once now.
+
+- Operations affected: Those operations use average O(1) lookup now instead of O(n) scan which no new list is created for each query.
+
+- Time/memory trade-offs: Building the indexes costs O(n + m) once. After that, queries are average O(1). The extra memory is O(n/m) for the two dictionaries and the per-location lists. The dictionaries are built once and reused, so the setup cost is paid back after only a few queries.
+
+
 ## 3. Algorithms and adaptation
 
 Explain your route finder at a useful high level and how the travel-budget query adapts the same ideas.
