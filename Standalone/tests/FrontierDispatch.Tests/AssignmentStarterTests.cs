@@ -1,6 +1,7 @@
-using System;
-using NUnit.Framework;
 using FrontierDispatch.Core;
+using NUnit.Framework;
+using System;
+using System.Collections.Generic;
 
 namespace FrontierDispatch.Tests
 {
@@ -25,6 +26,40 @@ namespace FrontierDispatch.Tests
             queue.Enqueue("cheap", 2);
             queue.Enqueue("medium", 5);
             Assert.That(queue.Dequeue(), Is.EqualTo("cheap"));
+        }
+
+        [Test]
+        public void PriorityQueue_EmptyQueue_ThrowInvalidOperationException()
+        {
+            var queue = new MinPriorityQueue<string>();
+            Assert.Throws<InvalidOperationException>(() => queue.Peek());
+            Assert.Throws<InvalidOperationException>(() => queue.Dequeue());
+            Assert.That(queue.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void PriorityQueue_SingleItem_CountChanges()
+        {
+            var queue = new MinPriorityQueue<string>();
+            queue.Enqueue("only", 1);
+
+            Assert.That(queue.Peek(), Is.EqualTo("only"));
+            Assert.That(queue.Count, Is.EqualTo(1));
+            Assert.That(queue.Dequeue(), Is.EqualTo("only"));
+            Assert.That(queue.Count, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void PriorityQueue_Duplicates_ItemsInAscending()
+        {
+            var queue = new MinPriorityQueue<int>();
+            int[] priorities = { 7, 3, 9, 1, 3, 9, 4, 7, 0 };
+            foreach (int p in priorities) queue.Enqueue(p, p);
+
+            var result = new List<int>();
+            while (queue.Count > 0) result.Add(queue.Dequeue());
+
+            Assert.That(result, Is.EqualTo(new[] { 0, 1, 3, 3, 4, 7, 7, 9, 9 }));
         }
 
         [Test, Ignore("Phase 4: enable when implementing Dijkstra route finding.")]
