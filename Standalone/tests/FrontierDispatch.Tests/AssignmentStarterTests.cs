@@ -77,7 +77,7 @@ namespace FrontierDispatch.Tests
         private static WorldData CreateTinyWorld()
         {
             var locations = new List<Location>();
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 5; ++i)
                 locations.Add(new Location(i, "Outpost " + i, new WorldPosition(i, 0), "Outpost"));
 
             var connections = new List<Connection>
@@ -86,6 +86,7 @@ namespace FrontierDispatch.Tests
             new Connection(0, 2, 3),
             new Connection(2, 1, 1),
             new Connection(1, 3, 2),
+            new Connection(0, 4, 0),
             };
 
             return new WorldData(locations, connections);
@@ -143,13 +144,44 @@ namespace FrontierDispatch.Tests
             Assert.That(sum, Is.EqualTo(result.TotalCost));
         }
 
-        [Test, Ignore("Phase 5: enable when implementing bounded reachability.")]
+        [Test]
+        //Ignore("Phase 5: enable when implementing bounded reachability.")
         public void Reachability_ZeroBudget_IncludesStartAtZeroCost()
         {
             var query = new ReachabilityQuery(WorldDatasetFactory.CreateSmall());
             var result = query.FindReachable(0, 0);
             Assert.That(result.ContainsKey(0), Is.True);
             Assert.That(result[0], Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Reachability_UsesTotalCostWithinBudget()
+        {
+            var query = new ReachabilityQuery(CreateTinyWorld());
+
+            var result = query.FindReachable(0, 4);
+
+            Assert.That(result.Count, Is.EqualTo(4));
+            Assert.That(result[0], Is.EqualTo(0));
+            Assert.That(result[4], Is.EqualTo(0));
+            Assert.That(result[2], Is.EqualTo(3));
+            Assert.That(result[1], Is.EqualTo(4));
+            Assert.That(result.ContainsKey(3), Is.False);
+        }
+
+        [Test]
+        public void Reachability_ZeroBudgetAndDeadEnd()
+        {
+            var query = new ReachabilityQuery(CreateTinyWorld());
+
+            var zero = query.FindReachable(0, 0);
+            Assert.That(zero.Count, Is.EqualTo(2));
+            Assert.That(zero.ContainsKey(0), Is.True);
+            Assert.That(zero.ContainsKey(4), Is.True);
+
+            var deadEnd = query.FindReachable(3, 100);
+            Assert.That(deadEnd.Count, Is.EqualTo(1));
+            Assert.That(deadEnd[3], Is.EqualTo(0));
         }
     }
 }
