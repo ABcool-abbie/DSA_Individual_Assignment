@@ -20,6 +20,7 @@ namespace FrontierDispatch.Core
     public sealed class ReachabilityQuery
     {
         private readonly WorldData _world;
+        private readonly WorldQueries _queries;
 
         /// <summary>
         /// Creates a reachability query operating on the supplied world.
@@ -27,6 +28,7 @@ namespace FrontierDispatch.Core
         public ReachabilityQuery(WorldData world)
         {
             _world = world ?? throw new ArgumentNullException(nameof(world));
+            _queries = new WorldQueries(world);
         }
 
         /// <summary>
@@ -38,8 +40,43 @@ namespace FrontierDispatch.Core
         /// </summary>
         public IReadOnlyDictionary<int, int> FindReachable(int startLocationId, int maxTravelCost)
         {
-            // TODO: adapt shortest-path reasoning to the travel-cost budget.
-            throw new NotImplementedException();
+            // adapt shortest-path reasoning to the travel-cost budget.
+            //throw new NotImplementedException();
+
+            var reachable = new Dictionary<int, int>();
+            if (maxTravelCost < 0 || _queries.FindLocationById(startLocationId) == null) return reachable;
+
+            var best = new Dictionary<int, int> { [startLocationId] = 0 };
+            var closed = new HashSet<int>();
+            var frontier = new MinPriorityQueue<int>();
+
+            frontier.Enqueue(startLocationId, 0);
+
+            while (frontier.Count > 0)
+            {
+                int current = frontier.Dequeue();
+
+                if (!closed.Add(current)) continue;
+
+                int currentCost = best[current];
+                reachable[current] = currentCost;
+
+                foreach (Connection connection in _queries.FindOutgoingConnections(current))
+                {
+                    int next = connection.ToLocationId;
+                    int candidate = currentCost + connection.TravelCost;
+
+                    if (candidate > maxTravelCost) continue;
+
+                    if (!best.TryGetValue(next, out int known) || candidate < known)
+                    {
+                        best[next] = candidate;
+                        frontier.Enqueue(next, candidate);
+                    }
+                }
+            }
+
+            return reachable;
         }
     }
 }
