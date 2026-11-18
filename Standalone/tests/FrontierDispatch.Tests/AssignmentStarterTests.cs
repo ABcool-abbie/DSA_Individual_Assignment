@@ -62,7 +62,9 @@ namespace FrontierDispatch.Tests
             Assert.That(result, Is.EqualTo(new[] { 0, 1, 3, 3, 4, 7, 7, 9, 9 }));
         }
 
-        [Test, Ignore("Phase 4: enable when implementing Dijkstra route finding.")]
+        [Test]
+
+        //Ignore("Phase 4: enable when implementing Dijkstra route finding.")
         public void Dijkstra_StartEqualsGoal_ReturnsZeroCostRoute()
         {
             var finder = new DijkstraRouteFinder(WorldDatasetFactory.CreateSmall());
