@@ -69,7 +69,7 @@ Important tests/edge cases and what they demonstrate.
 
 Record reproducible before/after measurements for loading/preparation, repeated runtime work, and relevant allocation behavior. Explain what changed and why.
 
-### Baseline (untouched starter)
+<!-- ### Baseline (untouched starter)
 - Locations: 2500
 - Connections: 9800
 - Iterations: 5000
@@ -81,17 +81,50 @@ Record reproducible before/after measurements for loading/preparation, repeated 
 - Connections: 9800
 - Iterations: 5000
 - Elapsed: 0 ms
-- Checksum: 6267100
+- Checksum: 6267100 -->
 
+### Baseline (untouched starter)
+Baseline world-query workload
+Locations: 2500
+Connections: 9800
+Iterations: 5000
+Prepare (CreateMedium + WorldQueries): 1.482 ms
+Elapsed: 189 ms
+Elapsed (precise): 189.609 ms
+Allocated during query loop: 440000 bytes
+Checksum: 6267100
+Absolute time varies by machine. Keep this result for before/after comparison.
+
+### After using Dictionary
+Baseline world-query workload
+Locations: 2500
+Connections: 9800
+Iterations: 5000
+Prepare (CreateMedium + WorldQueries): 5.656 ms
+Elapsed: 0 ms
+Elapsed (precise): 0.444 ms
+Allocated during query loop: 0 bytes
+Checksum: 6267100
+Absolute time varies by machine. Keep this result for before/after comparison.
+
+| Operation / workload | Before | After | Expected complexity | Reason / interpretation |
+| --- | --- | --- | --- | --- |
+| Find location by ID + get outgoing connections | 189.609 ms | 0.444 ms  | Before: O(n) lookup, O(m) outgoing scan, per query. After: average O(1) each. | Dictionary indexes replace two linear scans. The outgoing-connections scan touched all 9800 connections per call, so it dominated. About 427 times faster. Checksum is identical (6267100). |
+| Allocation in the query loop | 440000 bytes | 0 bytes | Before: O(output) allocation per query. After: none. | The starter created a new `List` each call. This size is consistent with one `List` object plus a small backing array. Now a prebuilt list is returned. |
+| Load / prepare medium world | 1.482 ms | 5.656 ms | O(n + m) before and after | The indexes are built once, so preparation costs about 4 ms more (same big-O, larger constant). Paid back after roughly 110 iterations. |
 ## 7. Development reflection
 
 Describe one bug, wrong assumption, failed approach, or surprising result and how you investigated it.
+- After I added the dictionary indexes, the supplied timer printed `Elapsed: 0 ms`. I first could not tell if this meant "extremely fast" or "the measurement is broken". So I asked AI for help (because I never use or measure baseline before) and it suggested me to print `sw.Elapsed.TotalMilliseconds` with three decimals, which gave 0.444 ms.
+
+- I also started from my own Lab 4B heap and Lab 6 Dijkstra, but they did not fit the assignment directly. My Lab 4B heap returned a `PriorityEntry<T>` from `PeekNext`/`DequeueNext`. The assignment's `MinPriorityQueue<T>` has private `Entry` struct (`Item`, `Priority`) and `Peek`/`Dequeue` return only the item `T`. I kept the heap logic (sift up, sift down, parent/child indexes) and changed the entry type and the return values. In Lab 6, the frontier returned the entry with its cost, so I skipped stale queue entries with `if (cost > best[current]) continue;`. With the assignment queue I only get the location ID back, so I could not compare costs. I changed to a `closed` set instead: a location is final the first time it is removed and later copies are skipped. Before this fix my first version expanded the same location several times, which also inflated `ExpandedCount`.
 
 ## 8. Tools and AI assistance
 
 Briefly describe relevant assistance, if any.
-- tell me what are baseline bottlenecks and how to measure them
-- suggest test ideas 
+- Reviewed my baseline code and told me what are those and how to measure them.
+- Suggested additional test ideas. I then implemented and created the test cases using this suggestion.
+- Reviewed my first Dijkstra version and pointed out bugs (a compile error + no handling of repeated queue entries). I then rewrote my version using this feedback.
 
 ## 9. VG extension
 
