@@ -42,8 +42,10 @@ Explain your route finder at a useful high level and how the travel-budget query
 | Find location by ID | Dictionary | O(1) | One hash lookup instead of scanning all locations |
 | Get outgoing connections | Dictionary | O(1) | Connections are grouped by source once instead of scanning all connections |
 | Priority queue enqueue | Binary min-heap | O(log n) | To insert, put the new entry at the end and move it up. This takes at most the height of the heap. |
-| Priority queue dequeue-min | Binary min-heap | O(log n) | To remove, take the last entry, put it at the root, and move it down. This also takes at most the height. |
-| Route finding | Dijkstra with the binary heap | O(log n) | Each location is finalized only once. Each connection adds at most one entry to the queue. Every queue operation costs O(log n). |
+| Priority queue dequeue-min | Binary min-heap | O(log m) | To remove, take the last entry, put it at the root, and move it down. This also takes at most the height. |
+| Route finding | Dijkstra with the binary heap | O((n + m)log n) | Each location is finalized only once. Each connection adds at most one entry to the queue. Every queue operation costs O(log n). |
+
+**n = locations, m = connections.
 
 ## 5. Correctness and testing
 
