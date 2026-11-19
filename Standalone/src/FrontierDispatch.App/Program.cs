@@ -23,8 +23,10 @@ static void RunBaseline()
 {
     // Build the dataset before timing the repeated runtime queries.
     // This baseline therefore measures query work, not world construction.
+    var prepTimer = Stopwatch.StartNew();
     WorldData world = WorldDatasetFactory.CreateMedium();
     var queries = new WorldQueries(world);
+    prepTimer.Stop();
 
     // The checksum provides a stable sanity check that the workload still
     // produces equivalent results after implementation changes.
@@ -33,6 +35,8 @@ static void RunBaseline()
     const int iterations = 5000;
 
     var sw = Stopwatch.StartNew();
+
+    long allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
 
     for (int i = 0; i < iterations; ++i)
     {
@@ -45,13 +49,18 @@ static void RunBaseline()
         checksum += queries.FindOutgoingConnections(id).Count;
     }
 
+    long allocatedAfter = GC.GetAllocatedBytesForCurrentThread();
+
     sw.Stop();
 
     Console.WriteLine("Baseline world-query workload");
     Console.WriteLine($"Locations: {world.Locations.Count}");
     Console.WriteLine($"Connections: {world.Connections.Count}");
     Console.WriteLine($"Iterations: {iterations}");
+    Console.WriteLine($"Prepare (CreateMedium + WorldQueries): {prepTimer.Elapsed.TotalMilliseconds:F3} ms");
     Console.WriteLine($"Elapsed: {sw.ElapsedMilliseconds} ms");
+    Console.WriteLine($"Elapsed (precise): {sw.Elapsed.TotalMilliseconds:F3} ms");
+    Console.WriteLine($"Allocated during query loop: {allocatedAfter - allocatedBefore} bytes");
     Console.WriteLine($"Checksum: {checksum}");
     Console.WriteLine("Absolute time varies by machine. Keep this result for before/after comparison.");
 }
